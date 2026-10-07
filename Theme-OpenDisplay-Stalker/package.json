@@ -1,0 +1,46 @@
+{
+  "name": "dsh-theme-open-display-stalker",
+  "version": "1.0.0",
+  "description": "DSH-Theme-OpenDisplay-Stalker — a boot-splash display plugin for the DeepSeek Harness Web UI: a three-second opening sequence over your own image with a blue tech reveal of 欢迎来到未来, played on every new window and skippable with a single click.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "assets/open-display.svg",
+    "tools/gen-art.mjs",
+    "tools/sync-profile.mjs",
+    "tools/freeze.mjs",
+    "tools/check.mjs",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "theme",
+    "display",
+    "splash",
+    "boot-animation",
+    "open-display",
+    "stalker"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
+    }
+  }
+}

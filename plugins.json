@@ -7,6 +7,13 @@
       "displayName": "DSH-theme-display-2001SpaceOdyssey",
       "artifact": "DSH-theme-display-2001SpaceOdyssey.tgz",
       "summary": "《2001 太空漫游》离心机走廊主题：可换底板、彩虹边框、锈铁/黄铜的废土风侧栏"
+    },
+    {
+      "dir": "Theme-OpenDisplay-Stalker",
+      "package": "dsh-theme-open-display-stalker",
+      "displayName": "DSH-Theme-OpenDisplay-Stalker",
+      "artifact": "DSH-Theme-OpenDisplay-Stalker.tgz",
+      "summary": "开机动画：3 秒序列 + 蓝色科技字「欢迎来到未来」，可上传自己的图，单击即可跳过"
     }
   ]
 }

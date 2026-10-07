@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
-const TARBALL = 'DSH-theme-display-2001SpaceOdyssey.tgz'
+const TARBALL = 'DSH-Theme-OpenDisplay-Stalker.tgz'
 
 const args = process.argv.slice(2)
 const flag = (name, fallback) => {
@@ -53,11 +53,10 @@ if (dryRun) {
   process.exit(0)
 }
 
-// 1. Pack into the profile's vendor dir. `npm pack` names the file after the
-//    package, so it is renamed to the single-file name this project uses.
-//    npm is invoked as its JS CLI through the running node: spawning npm.cmd
-//    directly is rejected (EINVAL) on hardened Node builds, and passing args
-//    through a shell is exactly what that hardening guards against.
+// 1. Pack into the profile's vendor dir. npm is invoked as its JS CLI through
+//    the running node: spawning npm.cmd directly is rejected (EINVAL) on
+//    hardened Node builds, and passing args through a shell is exactly what
+//    that hardening guards against.
 const runPack = () => {
   const binDir = path.dirname(process.execPath)
   const candidates = [
@@ -65,12 +64,13 @@ const runPack = () => {
     path.join(binDir, '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js'),
   ]
   const cli = candidates.find((candidate) => fs.existsSync(candidate))
-  const args = ['pack', ROOT, '--pack-destination', vendorDir]
+  const packArgs = ['pack', ROOT, '--pack-destination', vendorDir]
   const options = { stdio: ['ignore', 'inherit', 'inherit'] }
-  if (cli !== undefined) execFileSync(process.execPath, [cli, ...args], options)
-  else execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', args, { ...options, shell: process.platform === 'win32' })
+  if (cli !== undefined) execFileSync(process.execPath, [cli, ...packArgs], options)
+  else execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', packArgs, { ...options, shell: process.platform === 'win32' })
 }
 runPack()
+
 const packed = path.join(vendorDir, `${PKG.name}-${PKG.version}.tgz`)
 if (!fs.existsSync(packed)) {
   console.error(`npm pack did not produce ${packed}`)

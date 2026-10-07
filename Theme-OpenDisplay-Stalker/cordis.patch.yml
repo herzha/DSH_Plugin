@@ -1,0 +1,10 @@
+# Loader row contributed by DSH-Theme-OpenDisplay-Stalker.
+#
+# The id is the plugin's public name; the name is the installed package. Both
+# halves of the package (host entry + web client entry) are loaded from here.
+# Disable it from a profile patch with:
+#   - id: DSH-Theme-OpenDisplay-Stalker
+#     disabled: true
+- insert:
+    - id: DSH-Theme-OpenDisplay-Stalker
+      name: dsh-theme-open-display-stalker

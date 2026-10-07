@@ -8,9 +8,14 @@
 | 插件 | 一句话 | 安装包 |
 | --- | --- | --- |
 | [**DSH-theme-display-2001SpaceOdyssey**](./Theme-Display-2001SpaceOdyssey) | 《2001 太空漫游》离心机走廊主题：可换底板、彩虹边框、锈铁与黄铜的废土风侧栏、青色会话标题胶囊 | [`DSH-theme-display-2001SpaceOdyssey.tgz`](./DSH-theme-display-2001SpaceOdyssey.tgz) |
+| [**DSH-Theme-OpenDisplay-Stalker**](./Theme-OpenDisplay-Stalker) | 开机动画：3 秒序列 + 蓝色科技字「欢迎来到未来」，可上传自己的图，单击鼠标立刻跳过 | [`DSH-Theme-OpenDisplay-Stalker.tgz`](./DSH-Theme-OpenDisplay-Stalker.tgz) |
+
+两个插件**互不冲突**，可以同时装：不共用类名、属性、loader id、存储库和 z-index 段
+（第二个插件的自检里有一节专门逐项比对）。
 
 关键词：`DSH` `DeepSeek Harness` `theme` `display plugin` `DSH-theme-display-2001SpaceOdyssey`
-`2001 Space Odyssey` `2001太空漫游` `主题插件` `桌宠` `废土` `机械迷城`
+`DSH-Theme-OpenDisplay-Stalker` `2001 Space Odyssey` `2001太空漫游` `开机动画` `splash`
+`boot animation` `主题插件` `废土` `机械迷城`
 
 ---
 
@@ -81,7 +86,9 @@ DSH_Plugin/
 ├── tools/pack-all.mjs                     ← 按清单把每个插件打成根目录的 .tgz
 ├── Theme-Display-2001SpaceOdyssey/        ← 插件 1（源码 + 自带自检）
 │   ├── package.json  lib/  assets/  cordis.patch.yml  tools/  README.md
-└── DSH-theme-display-2001SpaceOdyssey.tgz ← 插件 1 的安装包（已提交，供 ① 直链使用）
+├── Theme-OpenDisplay-Stalker/             ← 插件 2（同上结构）
+├── DSH-theme-display-2001SpaceOdyssey.tgz ← 插件 1 的安装包（已提交，供直链使用）
+└── DSH-Theme-OpenDisplay-Stalker.tgz      ← 插件 2 的安装包（已提交）
 ```
 
 约定：
