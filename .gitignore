@@ -1,0 +1,18 @@
+# Build and editor noise
+node_modules/
+.pnpm-store/
+
+# Scratch space used while investigating the harness (kept out of the repo)
+.recon*/
+.dev*/
+.scratch/
+.pack-*/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Nothing here is generated: lib/ is hand-written and the *.tgz at the repo
+# root IS the release artifact, so both are committed on purpose.

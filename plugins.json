@@ -1,0 +1,12 @@
+{
+  "$comment": "DSH 插件清单。每个条目对应仓库根下的一个插件文件夹，以及根目录里那个可直接安装的 .tgz。新增插件时在这里加一条，然后跑 node tools/pack-all.mjs。",
+  "plugins": [
+    {
+      "dir": "Theme-Display-2001SpaceOdyssey",
+      "package": "dsh-theme-display-2001-space-odyssey",
+      "displayName": "DSH-theme-display-2001SpaceOdyssey",
+      "artifact": "DSH-theme-display-2001SpaceOdyssey.tgz",
+      "summary": "《2001 太空漫游》离心机走廊主题：可换底板、彩虹边框、锈铁/黄铜的废土风侧栏"
+    }
+  ]
+}

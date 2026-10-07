@@ -1,0 +1,46 @@
+{
+  "name": "dsh-theme-display-2001-space-odyssey",
+  "version": "1.0.1",
+  "description": "DSH-theme-display-2001SpaceOdyssey — a 2001: A Space Odyssey display-theme layer for the DeepSeek Harness Web UI: swappable backdrop plate, DeepSeek-blue brand seat, amber nav entries, bracketed workspace bay, instrument-panel composer and an animated caption rail.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "assets/corridor.svg",
+    "assets/corridor-preview.png",
+    "assets/corridor-preview-composited.png",
+    "tools/set-background.mjs",
+    "tools/gen-corridor.mjs",
+    "tools/sync-profile.mjs",
+    "tools/freeze.mjs",
+    "tools/check.mjs",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "theme",
+    "display",
+    "2001-space-odyssey"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
+    }
+  }
+}

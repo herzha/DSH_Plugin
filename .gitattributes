@@ -1,0 +1,12 @@
+# Keep the repository byte-identical across platforms.
+#
+# Everything here is either read by Node directly (lib/, tools/) or hashed by
+# tools/pack-all.mjs --check, so a Windows checkout must not rewrite line
+# endings: that would make a freshly cloned tree report the committed .tgz as
+# stale even though nothing changed.
+* text=auto eol=lf
+
+# Binary payloads: never touch them.
+*.png binary
+*.tgz binary
+*.ico binary
