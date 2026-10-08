@@ -86,8 +86,27 @@ dsh plugin --profile desktop add ./DSH-theme-display-2001SpaceOdyssey.tgz
 | --- | --- | --- |
 | 在插件页输入 `DSH-theme-display-2001SpaceOdyssey` / `DSH-Theme-OpenDisplay-Stalker` / `dsh-pet-robot` 直接解析出插件 | ❌ / ❌ / ⚠️ | 这个名字解析走的是 **npm 源**，而 npm **禁止大写**包名（2017 年起），而且**大小写敏感**（实测 `npm view LODASH` → 404）。前两个驼峰名**不可能**成为 npm 包名；`dsh-pet-robot` 本身合法，但**仍需先发布到 npm** 才能按名解析 |
 | 用含这个名字的链接安装 | ✅ | 就是上面 ① —— 文件名本身就带着插件名（`dsh-pet-robot.tgz` 也有对应的包名） |
-| 在 GitHub 上搜到它 | ✅ | 仓库描述、topics、README、文件夹名、安装包文件名、`keywords` 全写了这些名字 |
+| 在 GitHub 上搜到它 | ⚠️ 差一步 | README、文件夹名、安装包文件名、`keywords` 里**已经**全写了这些名字 ✅。但 GitHub 的搜索权重主要看仓库的 **About**，而本仓库的 Description / Topics **目前是空的** ❌ —— 手动填一次即可，见下 |
 | 输入小写包名安装 | ✅ | 先按 ② 发布到 npm，然后填小写连字符形式 |
+
+### 让这些名字真的能被搜到（一次性设置，约 1 分钟）
+
+仓库首页右上角 **About** 旁边的 ⚙（齿轮）→ 填：
+
+**Description**
+
+```text
+DeepSeek Harness 插件合集：2001 太空漫游主题、开机动画、桌面宠物机器人
+```
+
+**Topics**（逐个回车加入）
+
+```text
+dsh  deepseek-harness  theme  display-plugin  splash-screen  desktop-pet
+2001-space-odyssey  dsh-theme-display-2001spaceodyssey  dsh-theme-opendisplay-stalker  dsh-pet-robot
+```
+
+（Topics 会变成仓库首页的标签，也是搜索命中的主要来源。）
 
 结论：**"能被这个名字搜到"靠 GitHub + 文件名，"能被这个名字安装"靠 ① 的直链。**
 想做到"输入名字就能装"，只有发布到 npm 一条路，而那时名字必须是小写连字符形式。
