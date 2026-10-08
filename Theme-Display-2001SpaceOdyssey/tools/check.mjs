@@ -88,6 +88,9 @@ function makeDom () {
 const dom = makeDom()
 const loaded = []
 globalThis.window = {
+  // The scope self-heal schedules exactly one check after apply.
+  setTimeout: () => 1,
+  clearTimeout: () => {},
   __ModuleLoader__: {
     load: (spec) => {
       loaded.push(spec)
@@ -481,6 +484,24 @@ const unscoped = preludes.filter((selector) => !selector.includes('html[data-dsh
 ok('every selector is scoped or plugin-prefixed', unscoped.length === 0, unscoped.slice(0, 3).join(' | '))
 ok('no !important escapes', !css.includes('!important'))
 ok('reduced motion honoured', css.includes('prefers-reduced-motion'))
+
+// ── reload safety ───────────────────────────────────────────────────────────
+// A client bundle can be applied twice in one document (a rebuild re-imports
+// it). The first application's disposer used to remove the scope attribute and
+// the stylesheet the second one had just installed, which left the plugin
+// reporting itself active while every scoped rule was inert.
+console.log('reload safety')
+const firstApplication = disposers.length
+plugin.apply(ctx)
+ok('a second application is tolerated', disposers.length > firstApplication)
+for (const dispose of disposers.slice(0, firstApplication).reverse()) dispose()
+ok('a stale application cannot unscoped the live one',
+  dom.document.documentElement.attributes['data-dsh-2001'] !== undefined,
+  'removing the scope attribute makes the whole stylesheet inert')
+ok('a stale application does not remove the live stylesheet',
+  dom.nodes.some((node) => node.attributes['data-dsh-2001-style'] !== undefined && !node.removed))
+ok('the live token layer survives, and the stale one comes off',
+  layers.length === 1, `${layers.length} layer(s)`)
 
 console.log('unload')
 for (const dispose of disposers.slice().reverse()) dispose()

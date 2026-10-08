@@ -389,6 +389,21 @@ ok('nothing in the bundle fetches a file',
   !/\bfetch\(/.test(bundle) && !bundle.includes('assets/'),
   'the host serves no plugin assets, so the frame must be data or nothing')
 
+// ── reload safety ───────────────────────────────────────────────────────────
+// A client bundle can be applied twice in one document (a rebuild re-imports
+// it). The first application's disposer must not remove the scope attribute or
+// the stylesheet the second one just installed, or the plugin reports itself
+// active while every scoped rule is inert.
+console.log('reload safety')
+const firstApplication = disposers.length
+plugin.apply(ctx)
+ok('a second application is tolerated', disposers.length > firstApplication)
+for (const dispose of disposers.slice(0, firstApplication).reverse()) dispose()
+ok('a stale application cannot unscoped the live one',
+  dom.document.documentElement.attributes['data-dsh-stalker'] !== undefined)
+ok('a stale application does not remove the live stylesheet',
+  dom.nodes.some((node) => node.attributes['data-dsh-stalker-style'] !== undefined && !node.removed))
+
 // ── unload ──────────────────────────────────────────────────────────────────
 console.log('unload')
 for (const dispose of disposers.reverse()) dispose()

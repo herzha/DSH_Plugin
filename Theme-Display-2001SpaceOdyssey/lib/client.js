@@ -1115,11 +1115,13 @@ html[${ROOT_ATTRIBUTE}] ::selection {
 		 */
 		function publishRootAttribute() {
 			const root = document.documentElement;
-			const previous = root.getAttribute(ROOT_ATTRIBUTE);
 			root.setAttribute(ROOT_ATTRIBUTE, "on");
 			return () => {
-				if (previous === null) root.removeAttribute(ROOT_ATTRIBUTE);
-				else root.setAttribute(ROOT_ATTRIBUTE, previous);
+				// Remove rather than restore: the attribute belongs to this plugin,
+				// and only the live application's disposer can reach here, so leaving
+				// a stale value behind would keep every scoped rule alive after unload.
+				// (This is why the docstring above no longer claims the previous value.)
+				root.removeAttribute(ROOT_ATTRIBUTE);
 			};
 		}
 
@@ -1127,18 +1129,54 @@ html[${ROOT_ATTRIBUTE}] ::selection {
 		const inject = ["theme", "slots"];
 
 		/**
+		 * The newest apply() in this document owns the document-level effects.
+		 *
+		 * A client bundle can be applied more than once per document — a rebuild
+		 * re-imports it — and the OLD application's disposer used to run after the
+		 * new one had already set things up: it removed the scope attribute and the
+		 * stylesheet the live application depends on. The plugin then reported
+		 * itself active while every rule of its stylesheet was inert, because every
+		 * rule is scoped to that attribute. Toggling the plugin off and on only
+		 * "fixed" it by producing a single live application.
+		 */
+		let applicationToken = 0;
+
+		/**
 		 * Stack this plugin's display layer over whatever theme is active, add
 		 * its settings page, and hang the viewport frame on the shell overlay.
 		 * @param ctx - client root context.
 		 */
 		function apply(ctx) {
+			const token = ++applicationToken;
+			/** Run a document-level disposer only while this application is the live one. */
+			const owned = (dispose) => () => {
+				if (token === applicationToken) dispose();
+			};
+			// The token layer is deliberately NOT owned: it is a stack the theme
+			// service keeps per layer, so a stale application's layer must still come
+			// off on unload or disabling the plugin would leave its colours behind.
 			ctx.effect(() => ctx.theme.overrideTokens(PLUGIN_ID, TOKENS), "2001-space-odyssey: display tokens");
-			ctx.effect(publishRootAttribute, "2001-space-odyssey: scope attribute");
-			ctx.effect(installStyles, "2001-space-odyssey: display stylesheet");
+			ctx.effect(() => owned(publishRootAttribute()), "2001-space-odyssey: scope attribute");
+			ctx.effect(() => owned(installStyles()), "2001-space-odyssey: display stylesheet");
 			ctx.effect(() => {
 				void plate.hydrate();
-				return () => { plate.dispose(); };
+				return owned(() => { plate.dispose(); });
 			}, "2001-space-odyssey: plate store");
+			// Self-heal: re-assert the scope once, shortly after apply. The token
+			// above closes the known path by which it could go missing; this closes
+			// any path not thought of, because "active but unstyled" is
+			// indistinguishable from "broken" to whoever is looking at the screen.
+			ctx.effect(() => {
+				const timer = window.setTimeout(() => {
+					if (token !== applicationToken) return;
+					const root = document.documentElement;
+					if (!root.hasAttribute(ROOT_ATTRIBUTE)) {
+						root.setAttribute(ROOT_ATTRIBUTE, "on");
+						root.style.setProperty("--dsh-2001-plate-opacity", "1");
+					}
+				}, 900);
+				return () => { window.clearTimeout(timer); };
+			}, "2001-space-odyssey: scope self-heal");
 			ctx.effect(() => ctx.slots.inject("settings.section", () => ctx.slots.register({
 				name: "settings.section",
 				id: "dsh-2001-space-odyssey",

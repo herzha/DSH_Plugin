@@ -757,10 +757,18 @@ html[${ROOT_ATTRIBUTE}] .dshStalkerPanelFoot {
 		 * and it depends on neither React nor this plugin's state machine: it only
 		 * looks at the DOM and the timestamp the cover stamps on itself.
 		 *
-		 * @returns disposer stopping the watchdog.
+		 * It is reference-counted rather than one-per-application, because a
+		 * document can apply this bundle twice (a rebuild re-imports it) and two
+		 * watchdogs would simply be one to leak.
+		 *
+		 * @returns disposer releasing this application's hold on the watchdog.
 		 */
+		let watchdogHolders = 0;
+		let watchdogTimer = 0;
 		function installWatchdog() {
-			const timer = window.setInterval(() => {
+			watchdogHolders += 1;
+			if (watchdogTimer === 0) {
+				watchdogTimer = window.setInterval(() => {
 				const covers = document.querySelectorAll("[" + SCENE_ATTRIBUTE + "]");
 				if (covers.length === 0) return;
 				const stamps = Array.from(covers).map((cover) => {
@@ -777,8 +785,15 @@ html[${ROOT_ATTRIBUTE}] .dshStalkerPanelFoot {
 				// One stale cover already means the window is unusable, so the
 				// whole batch goes rather than leaving a second one in the way.
 				for (const cover of covers) cover.remove();
-			}, WATCHDOG_INTERVAL_MS);
-			return () => { window.clearInterval(timer); };
+				}, WATCHDOG_INTERVAL_MS);
+			}
+			return () => {
+				watchdogHolders -= 1;
+				if (watchdogHolders <= 0 && watchdogTimer !== 0) {
+					window.clearInterval(watchdogTimer);
+					watchdogTimer = 0;
+				}
+			};
 		}
 
 		/**
@@ -804,11 +819,13 @@ html[${ROOT_ATTRIBUTE}] .dshStalkerPanelFoot {
 		 */
 		function publishRootAttribute() {
 			const root = document.documentElement;
-			const previous = root.getAttribute(ROOT_ATTRIBUTE);
 			root.setAttribute(ROOT_ATTRIBUTE, "on");
 			return () => {
-				if (previous === null) root.removeAttribute(ROOT_ATTRIBUTE);
-				else root.setAttribute(ROOT_ATTRIBUTE, previous);
+				// Remove rather than restore: the attribute belongs to this plugin,
+				// and only the live application's disposer can reach here, so leaving
+				// a stale value behind would keep every scoped rule alive after unload.
+				// (This is why the docstring above no longer claims the previous value.)
+				root.removeAttribute(ROOT_ATTRIBUTE);
 			};
 		}
 
@@ -816,18 +833,43 @@ html[${ROOT_ATTRIBUTE}] .dshStalkerPanelFoot {
 		const inject = ["slots"];
 
 		/**
+		 * The newest apply() in this document owns the document-level effects.
+		 *
+		 * A client bundle can be applied more than once per document — a rebuild
+		 * re-imports it — and the OLD application's disposer used to run after the
+		 * new one had already set things up: it removed the scope attribute and the
+		 * stylesheet the live application depends on, leaving a plugin that reports
+		 * itself active while every scoped rule is inert.
+		 */
+		let applicationToken = 0;
+
+		/**
 		 * Add the opening sequence and its settings page.
 		 * @param ctx - client root context.
 		 */
 		function apply(ctx) {
-			ctx.effect(publishRootAttribute, "open-display-stalker: scope attribute");
-			ctx.effect(installStyles, "open-display-stalker: stylesheet");
-			ctx.effect(installWatchdog, "open-display-stalker: cover watchdog");
+			const token = ++applicationToken;
+			/** Run a document-level disposer only while this application is the live one. */
+			const owned = (dispose) => () => {
+				if (token === applicationToken) dispose();
+			};
+			ctx.effect(() => owned(publishRootAttribute()), "open-display-stalker: scope attribute");
+			ctx.effect(() => owned(installStyles()), "open-display-stalker: stylesheet");
+			ctx.effect(() => installWatchdog(), "open-display-stalker: cover watchdog");
 			ctx.effect(() => {
 				void art.hydrate();
 				void timing.hydrate();
-				return () => { art.dispose(); };
+				return owned(() => { art.dispose(); });
 			}, "open-display-stalker: splash storage");
+			// Self-heal: re-assert the scope once, shortly after apply.
+			ctx.effect(() => {
+				const timer = window.setTimeout(() => {
+					if (token !== applicationToken) return;
+					const root = document.documentElement;
+					if (!root.hasAttribute(ROOT_ATTRIBUTE)) root.setAttribute(ROOT_ATTRIBUTE, "on");
+				}, 900);
+				return () => { window.clearTimeout(timer); };
+			}, "open-display-stalker: scope self-heal");
 			ctx.effect(() => ctx.slots.inject("shell.overlay", () => ctx.slots.register({
 				name: "shell.overlay",
 				id: "dsh-open-display-stalker",

@@ -14,6 +14,13 @@
       "displayName": "DSH-Theme-OpenDisplay-Stalker",
       "artifact": "DSH-Theme-OpenDisplay-Stalker.tgz",
       "summary": "开机动画：3 秒序列 + 蓝色科技字「欢迎来到未来」，可上传自己的图，单击即可跳过"
+    },
+    {
+      "dir": "Pet-Robot",
+      "package": "dsh-pet-robot",
+      "displayName": "dsh-pet-robot",
+      "artifact": "dsh-pet-robot.tgz",
+      "summary": "桌宠：废土风机器人，可选完成提示音、双击看余额、真正关闭 DSH、保留欢迎页的锁屏"
     }
   ]
 }

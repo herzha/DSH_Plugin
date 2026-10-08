@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05070c"/>
+      <stop offset="0.5" stop-color="#12161c"/>
+      <stop offset="1" stop-color="#3a2a1c"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2118"/>
+      <stop offset="0.4" stop-color="#140f0b"/>
+      <stop offset="1" stop-color="#080605"/>
+    </linearGradient>
+    <radialGradient id="haze" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffb765" stop-opacity="0.42"/>
+      <stop offset="0.4" stop-color="#c9762c" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#1a120c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.46" r="0.74">
+      <stop offset="0.5" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.8"/>
+    </radialGradient>
+    <pattern id="dust" width="260" height="260" patternUnits="userSpaceOnUse" fill="#ffe6c4">
+      <circle cx="143.4" cy="18.2" r="0.6"/><circle cx="164.7" cy="132.1" r="0.6"/><circle cx="59.2" cy="163.3" r="0.4"/><circle cx="191.4" cy="155.1" r="0.5"/><circle cx="50.3" cy="193" r="0.9"/><circle cx="127.6" cy="48.4" r="0.7"/><circle cx="73.2" cy="168.5" r="0.8"/><circle cx="96.6" cy="21" r="0.8"/><circle cx="79.1" cy="7.9" r="0.6"/><circle cx="92.6" cy="176.9" r="0.6"/>
+    </pattern>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#ffd8a0" opacity="0.045"/>
+    </pattern>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <rect width="1920" height="660" fill="url(#dust)" opacity="0.4"/>
+  <ellipse cx="960" cy="630" rx="700" ry="330" fill="url(#haze)"/>
+
+  <path d="M0 660 L240 626 L520 648 L820 620
+           L1120 644 L1400 616 L1700 642 L1920 630
+           L1920 706 L0 706 Z"
+        fill="#0a0806" opacity="0.95"/>
+  <rect y="660" width="1920" height="420" fill="url(#ground)"/>
+  <g stroke="#8a5a2a" stroke-width="1" opacity="0.26"><line x1="960" y1="660" x2="-3980" y2="1080"/><line x1="960" y1="660" x2="-3486" y2="1080"/><line x1="960" y1="660" x2="-2992" y2="1080"/><line x1="960" y1="660" x2="-2498" y2="1080"/><line x1="960" y1="660" x2="-2004" y2="1080"/><line x1="960" y1="660" x2="-1510" y2="1080"/><line x1="960" y1="660" x2="-1016" y2="1080"/><line x1="960" y1="660" x2="-522" y2="1080"/><line x1="960" y1="660" x2="-28" y2="1080"/><line x1="960" y1="660" x2="466" y2="1080"/><line x1="960" y1="660" x2="960" y2="1080"/><line x1="960" y1="660" x2="1454" y2="1080"/><line x1="960" y1="660" x2="1948" y2="1080"/><line x1="960" y1="660" x2="2442" y2="1080"/><line x1="960" y1="660" x2="2936" y2="1080"/><line x1="960" y1="660" x2="3430" y2="1080"/><line x1="960" y1="660" x2="3924" y2="1080"/><line x1="960" y1="660" x2="4418" y2="1080"/><line x1="960" y1="660" x2="4912" y2="1080"/><line x1="960" y1="660" x2="5406" y2="1080"/><line x1="960" y1="660" x2="5900" y2="1080"/></g>
+  <g stroke="#8a5a2a" stroke-width="1" opacity="0.18"><line x1="0" y1="668" x2="1920" y2="668"/><line x1="0" y1="674" x2="1920" y2="674"/><line x1="0" y1="681.9" x2="1920" y2="681.9"/><line x1="0" y1="692.4" x2="1920" y2="692.4"/><line x1="0" y1="706.2" x2="1920" y2="706.2"/><line x1="0" y1="724.4" x2="1920" y2="724.4"/><line x1="0" y1="748.4" x2="1920" y2="748.4"/><line x1="0" y1="780.2" x2="1920" y2="780.2"/><line x1="0" y1="822.1" x2="1920" y2="822.1"/><line x1="0" y1="877.4" x2="1920" y2="877.4"/><line x1="0" y1="950.4" x2="1920" y2="950.4"/><line x1="0" y1="1046.7" x2="1920" y2="1046.7"/></g>
+
+  <g stroke="#0b141a" stroke-width="2" fill="none" opacity="0.9">
+    <path d="M290 660L330 360L370 660"/>
+    <path d="M304 555L356 555"/>
+    <path d="M314 465L346 465"/>
+    <path d="M330 360L242 404"/>
+    <path d="M330 370L426 418"/>
+  </g>
+  <g stroke="#0b141a" stroke-width="2" fill="none" opacity="0.9">
+    <path d="M1480 660L1520 430L1560 660"/>
+    <path d="M1494 579.5L1546 579.5"/>
+    <path d="M1504 510.5L1536 510.5"/>
+    <path d="M1520 430L1432 474"/>
+    <path d="M1520 440L1616 488"/>
+  </g>
+
+  <rect width="1920" height="1080" fill="url(#scan)"/>
+  <rect width="1920" height="1080" fill="url(#vignette)"/>
+</svg>

@@ -1,0 +1,10 @@
+# Loader row contributed by dsh-pet-robot.
+#
+# The id is the plugin's public name; the name is the installed package. Both
+# halves of the package (host entry + web client entry) are loaded from here.
+# Disable it from a profile patch with:
+#   - id: dsh-pet-robot
+#     disabled: true
+- insert:
+    - id: dsh-pet-robot
+      name: dsh-pet-robot

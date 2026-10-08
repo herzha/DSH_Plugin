@@ -1,7 +1,7 @@
 {
-  "name": "dsh-theme-display-2001-space-odyssey",
-  "version": "1.0.2",
-  "description": "DSH-theme-display-2001SpaceOdyssey — a 2001: A Space Odyssey display-theme layer for the DeepSeek Harness Web UI: swappable backdrop plate, DeepSeek-blue brand seat, amber nav entries, bracketed workspace bay, instrument-panel composer and an animated caption rail.",
+  "name": "dsh-pet-robot",
+  "version": "1.6.1",
+  "description": "dsh-pet-robot — a wasteland desktop pet for the DeepSeek Harness Web UI: draggable rust-bucket robot, optional task-completion chime, double-click balance readout, real window close and a welcome-screen lock.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -13,11 +13,8 @@
     "lib/index.js",
     "lib/client.js",
     "cordis.patch.yml",
-    "assets/corridor.svg",
-    "assets/corridor-preview.png",
-    "assets/corridor-preview-composited.png",
-    "tools/set-background.mjs",
-    "tools/gen-corridor.mjs",
+    "assets/lock-screen.svg",
+    "tools/gen-art.mjs",
     "tools/sync-profile.mjs",
     "tools/freeze.mjs",
     "tools/check.mjs",
@@ -26,9 +23,11 @@
   "keywords": [
     "dsh",
     "deepseek-harness",
-    "theme",
+    "pet",
+    "desktop-pet",
     "display",
-    "2001-space-odyssey"
+    "robot",
+    "wasteland"
   ],
   "license": "MIT",
   "dsh": {
@@ -39,7 +38,8 @@
       "platform": "web",
       "inject": [
         "@deepseek-ai/dsh-client-ui-theme",
-        "@deepseek-ai/dsh-client-ui-renderer"
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-shortcuts"
       ]
     }
   }
