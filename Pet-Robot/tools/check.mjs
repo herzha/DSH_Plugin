@@ -668,31 +668,36 @@ ok('it detaches on unload', hostSource.includes("ctx.effect(() => commands.regis
 // request path entirely, so it passed in silence. Each of these surfaces carries
 // its own marker in the DOM, so the detector is driven against them here.
 console.log('pending actions (driven)')
+/** marker.shown holds { region, selector }; a query may name a region or not. */
 const marker = { shown: [] }
 const markerQuery = dom.document.querySelector
 const markerQueryAll = dom.document.querySelectorAll
-const countMarked = (selector) => marker.shown.filter((entry) => entry === selector).length
-dom.document.querySelector = (selector) => {
-  if (countMarked(selector) > 0) return { nodeType: 1 }
-  return markerQuery(selector)
+const parseScope = (selector) => {
+  const match = /^\[data-conversation-region="([a-z]+)"\] (.*)$/.exec(selector)
+  return match === null ? { region: null, rest: selector } : { region: match[1], rest: match[2] }
 }
+const countMarked = (selector) => {
+  const { region, rest } = parseScope(selector)
+  return marker.shown.filter((entry) => entry.selector === rest && (region === null || entry.region === region)).length
+}
+dom.document.querySelector = (selector) => (countMarked(selector) > 0 ? { nodeType: 1 } : markerQuery(selector))
 dom.document.querySelectorAll = (selector) => {
   const found = countMarked(selector)
-  // The real querySelectorAll only ever returns marked or created nodes.
   return found > 0 ? new Array(found).fill({ nodeType: 1 }) : markerQueryAll(selector)
 }
 const runIntervals = () => {
   for (const entry of (timers.intervals ?? new Map()).values()) entry.fn()
 }
-/** Show `selector` and report whether that rings, and what the bubble says. */
-const ringFor = (selector) => {
+const shown = (region, selector) => [{ region, selector }]
+/** Show exactly these markers and report whether that rings. */
+const ringFor = (entries) => {
   marker.shown = []
-  // Clear any cooldown an earlier section left behind, or the first ring here is
-  // suppressed and the test blames the detector.
+  // Clear any cooldown an earlier section left, or the first ring is suppressed
+  // and the test blames the detector.
   advance(3000)
   runIntervals()
   const starts = audio.starts
-  marker.shown = [selector]
+  marker.shown = entries
   runIntervals()
   const nodes = renderApp(seatElement()).nodes
   return {
@@ -701,7 +706,7 @@ const ringFor = (selector) => {
   }
 }
 
-const approval = ringFor('[data-approval-key]')
+const approval = ringFor(shown(null, '[data-approval-key]'))
 ok('an approval rings the bell',
   approval.rang, 'a permission request is a different request path from a finished turn')
 ok('the approval bubble says what it wants',
@@ -710,23 +715,33 @@ ok('the approval bubble says what it wants',
 ok('the approval bubble is labelled as an approval',
   approval.bubble?.props['data-kind'] === 'approve', String(approval.bubble?.props['data-kind']))
 
-const question = ringFor('[data-question-key]')
+const question = ringFor(shown('composer', '[data-question-key]'))
 ok('a question set rings the bell', question.rang)
 ok('the question bubble asks for input',
   question.bubble?.children.join('').includes('需要你输入') || question.bubble?.children.join('').includes('Your turn'),
   question.bubble?.children.join(''))
 
-const review = ringFor('[data-plan-review-key]')
+const review = ringFor(shown('composer', '[data-plan-review-key]'))
 ok('a plan review rings the bell', review.rang, 'the third surface that waits on the viewer')
 
-// A completed question card stays in the transcript, so "something is waiting"
-// would be true for the rest of the session and the next request would be missed.
-// The detector counts instead, and this is that case driven directly.
-marker.shown = ['[data-question-key]']
+// A completed question card stays in the transcript, and a viewer reported the
+// bell claiming a question needed an answer that had already been given.
+const chatOnly = ringFor(shown('chat', '[data-question-key]'))
+ok('an answered question card in the transcript does not ring',
+  chatOnly.rang === false,
+  'a card in the chat region is not a request for attention')
+
+// A question waiting in the composer is the case that must still ring, so the
+// exclusion above is a region rule and not a blanket silence.
+const composerOnly = ringFor(shown('composer', '[data-question-key]'))
+ok('a question waiting in the composer still rings', composerOnly.rang)
+
+// And a new request rings even while an answered card sits on screen.
+marker.shown = shown('chat', '[data-question-key]')
 advance(3000)
 runIntervals()
 const startsWithStale = audio.starts
-marker.shown = ['[data-question-key]', '[data-approval-key]']
+marker.shown = [...shown('chat', '[data-question-key]'), ...shown(null, '[data-approval-key]')]
 runIntervals()
 const staleNodes = renderApp(seatElement()).nodes
 ok('a new request still rings with an answered card on screen',
@@ -738,12 +753,15 @@ ok('and it is identified as the approval, not the stale question',
 
 ok('all three waiting surfaces are watched',
   bundle.includes('[data-approval-key]') && bundle.includes('[data-question-key]') && bundle.includes('[data-plan-review-key]'))
+ok('the transcript is excluded from the waiting count',
+  bundle.includes('data-conversation-region="composer"'),
+  'an answered question card lives in the chat region and would otherwise ring forever')
 ok('the waiting detector is polled, not only event-driven',
   /let seen = pendingActions\(\)\.count;/.test(bundle),
   'the hook-based path missed approvals once already')
 ok('an answered prompt does not mask the next one',
-  bundle.includes('now.count > seen') && bundle.includes('querySelectorAll(selector)'),
-  'a completed question card stays in the transcript, so presence alone would stay true forever')
+  bundle.includes('now.count > seen'),
+  'the count, not the presence, is what says a new request arrived')
 dom.document.querySelector = markerQuery
 dom.document.querySelectorAll = markerQueryAll
 

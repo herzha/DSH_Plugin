@@ -1,6 +1,6 @@
 {
   "name": "dsh-pet-robot",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "dsh-pet-robot — a wasteland desktop pet for the DeepSeek Harness Web UI: draggable rust-bucket robot, optional task-completion chime, double-click balance readout, real window close and a welcome-screen lock.",
   "type": "module",
   "main": "lib/index.js",

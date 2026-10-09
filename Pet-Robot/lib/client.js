@@ -200,10 +200,21 @@ window.__ModuleLoader__.load({
 		 * means an approval rings the bell exactly like a finished turn does, and
 		 * that no status field has to be right for it to work.
 		 */
+		/**
+		 * What is waiting for an answer renders inside the composer region, while an
+		 * answered question stays in the transcript as a completed card. Scoping the
+		 * question markers to the composer is what stops a card the viewer already
+		 * answered from ringing the bell again whenever the transcript re-renders.
+		 *
+		 * Approvals are transient by nature - the panel unmounts the moment it is
+		 * answered - so they are watched anywhere, which also catches one raised for
+		 * a session that is not the one on screen.
+		 */
+		const COMPOSER_REGION = '[data-conversation-region="composer"] ';
 		const PENDING_SELECTORS = [
-			"[data-approval-key]",
-			"[data-question-key]",
-			"[data-plan-review-key]",
+			{ selector: "[data-approval-key]", reason: "approve", scope: "" },
+			{ selector: "[data-question-key]", reason: "ask", scope: COMPOSER_REGION },
+			{ selector: "[data-plan-review-key]", reason: "ask", scope: COMPOSER_REGION },
 		];
 		/** The host half registers this command; this half only asks for it. */
 		const QUIT_COMMAND = "quitdsh";
@@ -1670,12 +1681,12 @@ html[${ROOT_ATTRIBUTE}] .dshPetPanelFoot {
 		function pendingActions() {
 			let count = 0;
 			let approval = false;
-			for (const selector of PENDING_SELECTORS) {
-				const found = document.querySelectorAll(selector);
+			for (const entry of PENDING_SELECTORS) {
+				const found = document.querySelectorAll((entry.scope ?? "") + entry.selector);
 				const size = typeof found?.length === "number" ? found.length : 0;
 				if (size === 0) continue;
 				count += size;
-				if (selector.includes("approval")) approval = true;
+				if (entry.reason === "approve") approval = true;
 			}
 			return { count, reason: approval ? "approve" : "ask" };
 		}
