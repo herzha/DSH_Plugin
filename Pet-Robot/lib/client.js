@@ -191,6 +191,20 @@ window.__ModuleLoader__.load({
 		 * is its own URL — the host half watches for this marker. If the shell
 		 * never answers, the panel says so and closes the window instead. */
 		const STOP_LABELS = ["停止生成", "Stop generating"];
+		/**
+		 * Anything that puts a decision in front of the viewer.
+		 *
+		 * These are the app's own markers for the surfaces that take over the
+		 * composer or the conversation until an answer arrives: a Host permission
+		 * request, a question set, and a plan review. Watching for them by marker
+		 * means an approval rings the bell exactly like a finished turn does, and
+		 * that no status field has to be right for it to work.
+		 */
+		const PENDING_SELECTORS = [
+			"[data-approval-key]",
+			"[data-question-key]",
+			"[data-plan-review-key]",
+		];
 		/** The host half registers this command; this half only asks for it. */
 		const QUIT_COMMAND = "quitdsh";
 		const QUIT_FALLBACK_MS = 2600;
@@ -313,6 +327,20 @@ html[${ROOT_ATTRIBUTE}] .dshPetNotice {
 	white-space: nowrap;
 	box-shadow: 0 0 14px rgba(120,214,140,0.35);
 	animation: dshPetNoticeIn 260ms ease-out both;
+}
+/* A question and an approval are different asks, so they do not share the
+   completion's green: cyan for "type something", amber for "decide something". */
+html[${ROOT_ATTRIBUTE}] .dshPetNotice[data-kind="input"] {
+	border-color: rgba(120,214,255,0.6);
+	background-color: rgba(10,20,30,0.92);
+	color: #bfe6ff;
+	box-shadow: 0 0 14px rgba(120,196,255,0.35);
+}
+html[${ROOT_ATTRIBUTE}] .dshPetNotice[data-kind="approve"] {
+	border-color: rgba(255,178,84,0.65);
+	background-color: rgba(30,20,10,0.94);
+	color: #ffd08a;
+	box-shadow: 0 0 16px rgba(255,178,84,0.4);
 }
 /* The "watch unavailable" badge reads as a warning, not as a completion. */
 html[${ROOT_ATTRIBUTE}] .dshPetNotice[data-warn="true"] {
@@ -1279,7 +1307,7 @@ html[${ROOT_ATTRIBUTE}] .dshPetPanelFoot {
 				lastRing.current = Date.now();
 				celebrate.current = Date.now() + CELEBRATE_MS;
 				setMood("done");
-				setNotice(reason === "waiting" ? "input" : "done");
+				setNotice(reason === "approve" ? "approve" : (reason === "ask" || reason === "waiting" ? "input" : "done"));
 				if (prefs.get().sound !== "off") void speaker.play(prefs.get().sound);
 				const seen = statusReport.get();
 				statusReport.publish({ ...seen, fired: seen.fired + 1, last: reason });
@@ -1305,6 +1333,26 @@ html[${ROOT_ATTRIBUTE}] .dshPetPanelFoot {
 					if (running && !now) ring("settled");
 					running = now;
 				}, 900);
+				return () => { window.clearInterval(timer); };
+			}, [ring]);
+
+			/**
+			 * The same idea for every "it needs you" surface: an approval, a question
+			 * set, or a plan review.
+			 *
+			 * The bell used to ring only for a finished turn and for the status hook's
+			 * own "waiting" flag, so an approval - which is a different request path
+			 * entirely - passed in silence. These markers belong to the surfaces
+			 * themselves, so this fires for all of them and does not care which
+			 * service produced the request.
+			 */
+			React.useEffect(() => {
+				let seen = pendingActions().count;
+				const timer = window.setInterval(() => {
+					const now = pendingActions();
+					if (now.count > seen) ring(now.reason);
+					seen = now.count;
+				}, 700);
 				return () => { window.clearInterval(timer); };
 			}, [ring]);
 
@@ -1528,8 +1576,10 @@ html[${ROOT_ATTRIBUTE}] .dshPetPanelFoot {
 				// off, muted by the OS, or still waiting for the first gesture.
 				typeof useSessionStatus === "function" ? null : h("div", { className: "dshPetNotice", "data-warn": "true" },
 					text("监听不可用", "Watch unavailable")),
-				notice === "" ? null : h("div", { className: "dshPetNotice" },
-					notice === "input" ? text("需要你输入", "Your turn") : text("任务完成", "Task finished")),
+				notice === "" ? null : h("div", { className: "dshPetNotice", "data-kind": notice },
+					notice === "done"
+					? text("任务完成", "Task finished")
+					: (notice === "approve" ? text("等待审批", "Approval needed") : text("需要你输入", "Your turn"))),
 				h("div", { className: "dshPetBar", role: "toolbar" },
 					h("button", {
 						type: "button",
@@ -1605,6 +1655,29 @@ html[${ROOT_ATTRIBUTE}] .dshPetPanelFoot {
 				if (button !== null && typeof button.click === "function") return button;
 			}
 			return null;
+		}
+
+		/**
+		 * What is waiting on the viewer, judged from the surfaces themselves.
+		 *
+		 * The count matters, not just the presence: an answered question set stays
+		 * in the transcript as a completed card, so "something is there" would be
+		 * true for the rest of the session and every later request would be missed.
+		 * A count that goes UP is a new request, whatever else is still on screen.
+		 *
+		 * @returns how many prompts are on screen, and which kind.
+		 */
+		function pendingActions() {
+			let count = 0;
+			let approval = false;
+			for (const selector of PENDING_SELECTORS) {
+				const found = document.querySelectorAll(selector);
+				const size = typeof found?.length === "number" ? found.length : 0;
+				if (size === 0) continue;
+				count += size;
+				if (selector.includes("approval")) approval = true;
+			}
+			return { count, reason: approval ? "approve" : "ask" };
 		}
 
 		/**

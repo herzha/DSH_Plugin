@@ -663,7 +663,92 @@ ok('it leaves on its own if the kill is refused',
   hostSource.includes('process.exit(0)') && hostSource.includes('setTimeout'))
 ok('it detaches on unload', hostSource.includes("ctx.effect(() => commands.register("))
 
+// ── approvals, questions and plan reviews ring too ──────────────────────────
+// The bell used to depend on the status hook, and an approval is a different
+// request path entirely, so it passed in silence. Each of these surfaces carries
+// its own marker in the DOM, so the detector is driven against them here.
+console.log('pending actions (driven)')
+const marker = { shown: [] }
+const markerQuery = dom.document.querySelector
+const markerQueryAll = dom.document.querySelectorAll
+const countMarked = (selector) => marker.shown.filter((entry) => entry === selector).length
+dom.document.querySelector = (selector) => {
+  if (countMarked(selector) > 0) return { nodeType: 1 }
+  return markerQuery(selector)
+}
+dom.document.querySelectorAll = (selector) => {
+  const found = countMarked(selector)
+  // The real querySelectorAll only ever returns marked or created nodes.
+  return found > 0 ? new Array(found).fill({ nodeType: 1 }) : markerQueryAll(selector)
+}
+const runIntervals = () => {
+  for (const entry of (timers.intervals ?? new Map()).values()) entry.fn()
+}
+/** Show `selector` and report whether that rings, and what the bubble says. */
+const ringFor = (selector) => {
+  marker.shown = []
+  // Clear any cooldown an earlier section left behind, or the first ring here is
+  // suppressed and the test blames the detector.
+  advance(3000)
+  runIntervals()
+  const starts = audio.starts
+  marker.shown = [selector]
+  runIntervals()
+  const nodes = renderApp(seatElement()).nodes
+  return {
+    bubble: nodes.find((node) => node.props.className === 'dshPetNotice'),
+    rang: audio.starts > starts,
+  }
+}
+
+const approval = ringFor('[data-approval-key]')
+ok('an approval rings the bell',
+  approval.rang, 'a permission request is a different request path from a finished turn')
+ok('the approval bubble says what it wants',
+  approval.bubble?.children.join('').includes('等待审批') || approval.bubble?.children.join('').includes('Approval needed'),
+  approval.bubble?.children.join(''))
+ok('the approval bubble is labelled as an approval',
+  approval.bubble?.props['data-kind'] === 'approve', String(approval.bubble?.props['data-kind']))
+
+const question = ringFor('[data-question-key]')
+ok('a question set rings the bell', question.rang)
+ok('the question bubble asks for input',
+  question.bubble?.children.join('').includes('需要你输入') || question.bubble?.children.join('').includes('Your turn'),
+  question.bubble?.children.join(''))
+
+const review = ringFor('[data-plan-review-key]')
+ok('a plan review rings the bell', review.rang, 'the third surface that waits on the viewer')
+
+// A completed question card stays in the transcript, so "something is waiting"
+// would be true for the rest of the session and the next request would be missed.
+// The detector counts instead, and this is that case driven directly.
+marker.shown = ['[data-question-key]']
+advance(3000)
+runIntervals()
+const startsWithStale = audio.starts
+marker.shown = ['[data-question-key]', '[data-approval-key]']
+runIntervals()
+const staleNodes = renderApp(seatElement()).nodes
+ok('a new request still rings with an answered card on screen',
+  audio.starts > startsWithStale,
+  'presence alone would have stayed "waiting" and swallowed this approval')
+ok('and it is identified as the approval, not the stale question',
+  staleNodes.find((node) => node.props.className === 'dshPetNotice')?.props['data-kind'] === 'approve',
+  String(staleNodes.find((node) => node.props.className === 'dshPetNotice')?.props['data-kind']))
+
+ok('all three waiting surfaces are watched',
+  bundle.includes('[data-approval-key]') && bundle.includes('[data-question-key]') && bundle.includes('[data-plan-review-key]'))
+ok('the waiting detector is polled, not only event-driven',
+  /let seen = pendingActions\(\)\.count;/.test(bundle),
+  'the hook-based path missed approvals once already')
+ok('an answered prompt does not mask the next one',
+  bundle.includes('now.count > seen') && bundle.includes('querySelectorAll(selector)'),
+  'a completed question card stays in the transcript, so presence alone would stay true forever')
+dom.document.querySelector = markerQuery
+dom.document.querySelectorAll = markerQueryAll
+
 console.log('lock')
+
 ok('the lock cover keeps the welcome line',
   bundle.includes('const WELCOME = "欢迎来到未来"'))
 ok('the welcome line is drawn per glyph',
